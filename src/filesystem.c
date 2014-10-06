@@ -21,12 +21,12 @@ __attribute__((constructor)) void fs_init() {
 }
 
 int register_fs(const char * mountpoint, fs_open_t callback, void * opaque) {
-    int i;
+    int i;    /*mountpoint = "romfs" romfs_open = callback   &_sromfs = opaque*/
     DBGOUT("register_fs(\"%s\", %p, %p)\r\n", mountpoint, callback, opaque);
     
-    for (i = 0; i < MAX_FS; i++) {
+    for (i = 0; i < MAX_FS; i++) {/*0-15*/
         if (!fss[i].cb) {
-            fss[i].hash = hash_djb2((const uint8_t *) mountpoint, -1);
+            fss[i].hash = hash_djb2((const uint8_t *) mountpoint, -1);/*194595040*/
             fss[i].cb = callback;
             fss[i].opaque = opaque;
             return 0;
@@ -37,7 +37,7 @@ int register_fs(const char * mountpoint, fs_open_t callback, void * opaque) {
 }
 
 int fs_open(const char * path, int flags, int mode) {
-    const char * slash;
+    const char * slash;/*path = "/romfs/test.txt"*/
     uint32_t hash;
     int i;
 //    DBGOUT("fs_open(\"%s\", %i, %i)\r\n", path, flags, mode);
@@ -45,9 +45,9 @@ int fs_open(const char * path, int flags, int mode) {
     while (path[0] == '/')
         path++;
     
-    slash = strchr(path, '/');
+    slash = strchr(path, '/');/*no '/' will return 0*/
     
-    if (!slash)
+    if (!slash)/*no '/' will return -2*/
         return -2;
 
     hash = hash_djb2((const uint8_t *) path, slash - path);
@@ -55,7 +55,7 @@ int fs_open(const char * path, int flags, int mode) {
 
     for (i = 0; i < MAX_FS; i++) {
         if (fss[i].hash == hash)
-            return fss[i].cb(fss[i].opaque, path, flags, mode);
+            return fss[i].cb(fss[i].opaque, path, flags, mode); /*with '/' but wrong return -1 */
     }
     
     return -2;

@@ -15,7 +15,7 @@ struct romfs_fds_t {
 
 static struct romfs_fds_t romfs_fds[MAX_FDS];
 
-static uint32_t get_unaligned(const uint8_t * d) {
+static uint32_t get_unaligned(const uint8_t * d) {/*endiean transform ? */
     return ((uint32_t) d[0]) | ((uint32_t) (d[1] << 8)) | ((uint32_t) (d[2] << 16)) | ((uint32_t) (d[3] << 24));
 }
 
@@ -66,7 +66,7 @@ static off_t romfs_seek(void * opaque, off_t offset, int whence) {
 }
 
 const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t * len) {
-    const uint8_t * meta;
+    const uint8_t * meta;              /*romfs=0xdba4 <_sromfs> , h=3764664357, len=0x0 */
 
     for (meta = romfs; get_unaligned(meta) && get_unaligned(meta + 4); meta += get_unaligned(meta + 4) + 8) {
         if (get_unaligned(meta) == h) {
@@ -101,5 +101,6 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
 
 void register_romfs(const char * mountpoint, const uint8_t * romfs) {
 //    DBGOUT("Registering romfs `%s' @ %p\r\n", mountpoint, romfs);
+    /*mountpoint="romfs", * romfs = &_sromfs*/
     register_fs(mountpoint, romfs_open, (void *) romfs);
 }

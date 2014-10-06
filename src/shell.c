@@ -68,7 +68,7 @@ int filedump(const char *filename){
 
 	int fd=fs_open(filename, 0, O_RDONLY);
 
-	if(fd==OPENFAIL)
+	if(fd==OPENFAIL)/*OPENFAIL=-1*/
 		return 0;
 
 	fio_printf(1, "\r\n");
@@ -91,13 +91,13 @@ void ps_command(int n, char *argv[]){
 }
 
 void cat_command(int n, char *argv[]){
-	if(n==1){
+	if(n==1){/*no assigned directory*/
 		fio_printf(2, "\r\nUsage: cat <filename>\r\n");
 		return;
 	}
 
 	if(!filedump(argv[1]))
-		fio_printf(2, "\r\n%s no such file or directory.\r\n", argv[1]);
+		fio_printf(2, "\r\n%s no such file or directory.\r\n", argv[1]);/*assigned wrong directory*/
 }
 
 void man_command(int n, char *argv[]){
@@ -146,7 +146,7 @@ void test_command(int n, char *argv[]) {
 
     fio_printf(1, "\r\n");
 
-    handle = host_action(SYS_OPEN, "output/syslog", 8);
+    handle = host_action(SYS_OPEN, "mkdir -p output", 8);
     if(handle == -1) {
         fio_printf(1, "Open file error!\n\r");
         return;
