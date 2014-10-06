@@ -87,13 +87,13 @@ char recv_byte()
 }
 void command_prompt(void *pvParameters)
 {
-	char buf[128];
-	char *argv[20];
+	char buf[128];     	/*fetch command*/
+	char *argv[20];		/*fetch command variable*/	
         char hint[] = USER_NAME "@" USER_NAME "-STM32:~$ ";
 
 	fio_printf(1, "\rWelcome to FreeRTOS Shell\r\n");
 	while(1){
-                fio_printf(1, "%s", hint);
+        fio_printf(1, "%s", hint);
 		fio_read(0, buf, 127);
 	
 		int n=parse_command(buf, argv);
@@ -157,6 +157,7 @@ int main()
 	fio_init();
 	
 	register_romfs("romfs", &_sromfs);
+	/*regist a romfs*/
 	
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */
