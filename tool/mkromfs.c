@@ -76,11 +76,15 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
             size = strlen(fullpath);
             // add fullpath length
             b = (size >> 0) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
+            b = (size >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+            
             // add fullpath
-            fwrite(fullpath, size, 1, outfile);
+            fwrite(fullpath, 24, 1, outfile);
 
 
-            // calculate file size 
+            // calculate file size    
             fseek(infile, 0, SEEK_END);
             size = ftell(infile);
             fseek(infile, 0, SEEK_SET);
