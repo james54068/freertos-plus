@@ -59,17 +59,39 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
                 perror("opening input file");
                 exit(-1);
             }
+
+            // add hash info
             b = (hash >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (hash >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+
+            /*
+                * Add the meta data for the file name (legnth + fullpath).
+                * This occupies m bytes. One byte is for the length of file name
+                * while the other m-1 bytes are for the file name.
+                * Note the maximum length of the fullpath is 255 because only
+                * one byte is used to store the length.
+            */
+            size = strlen(fullpath);
+            // add fullpath length
+            b = (size >> 0) & 0xff; fwrite(&b, 1, 1, outfile);
+            // add fullpath
+            fwrite(fullpath, size, 1, outfile);
+
+
+            // calculate file size 
             fseek(infile, 0, SEEK_END);
             size = ftell(infile);
             fseek(infile, 0, SEEK_SET);
+
+             // add size info
             b = (size >>  0) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >>  8) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >> 16) & 0xff; fwrite(&b, 1, 1, outfile);
             b = (size >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
+
+            // add context
             while (size) {
                 w = size > 16 * 1024 ? 16 * 1024 : size;
                 fread(buf, 1, w, infile);
