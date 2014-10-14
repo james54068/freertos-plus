@@ -11,6 +11,7 @@
 struct fs_t {
     uint32_t hash;
     fs_open_t cb;
+    fs_path_t path_cb;
     void * opaque;
 };
 
@@ -20,7 +21,7 @@ __attribute__((constructor)) void fs_init() {
     memset(fss, 0, sizeof(fss));
 }
 
-int register_fs(const char * mountpoint, fs_open_t callback, void * opaque) {
+int register_fs(const char * mountpoint, fs_open_t callback, fs_path_t path,void * opaque) {
     int i;    /*mountpoint = "romfs" romfs_open = callback   &_sromfs = opaque*/
     DBGOUT("register_fs(\"%s\", %p, %p)\r\n", mountpoint, callback, opaque);
     
@@ -28,6 +29,7 @@ int register_fs(const char * mountpoint, fs_open_t callback, void * opaque) {
         if (!fss[i].cb) {
             fss[i].hash = hash_djb2((const uint8_t *) mountpoint, -1);/*194595040*/
             fss[i].cb = callback;
+            fss[i].path_cb = path;
             fss[i].opaque = opaque;
             return 0;
         }
