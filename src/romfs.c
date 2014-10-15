@@ -7,6 +7,8 @@
 #include "romfs.h"
 #include "osdebug.h"
 #include "hash-djb2.h"
+#include "clib.h"
+#include "shell.h"
 
 struct romfs_fds_t {
     const uint8_t * file;
@@ -65,16 +67,17 @@ static off_t romfs_seek(void * opaque, off_t offset, int whence) {
     return offset;
 }
 
-const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t * len) {
+const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t  len) {
     const uint8_t * meta;              /*romfs=0xdba4 <_sromfs> , h=3764664357, len=0x0 */
     
-    for (meta = romfs; get_unaligned(meta) && get_unaligned(meta + 32); meta += get_unaligned(meta + 32) + 36) {
-        if (get_unaligned(meta) == h) {
-
+    for (meta = romfs; get_unaligned(meta) && get_unaligned(meta + 32 ); meta += get_unaligned(meta + 32) + 36) {
+        if (get_unaligned(meta) == h) {/*check hash(test.txt)*/
+/*
             if (len) {
                 *len = get_unaligned(meta + 32);
             }
-            return meta + 36;
+  */
+            return meta + len;
         }
     }
 
@@ -82,14 +85,17 @@ const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32
 }
 
 
-
 static int romfs_open(void * opaque, const char * path, int flags, int mode) {
-    uint32_t h = hash_djb2((const uint8_t *) path, -1);
+    uint32_t h = hash_djb2((const uint8_t *) path, -1); /*hash(test.txt)*/
     const uint8_t * romfs = (const uint8_t *) opaque;
     const uint8_t * file;
     int r = -1;
 
-    file = romfs_get_file_by_hash(romfs, h, NULL);
+    if(filedump_flag == 1)
+    file = romfs_get_file_by_hash(romfs, h, 36);/*check hash(test.txt)*/
+    else if(filedump_flag == 0)
+    file = romfs_get_file_by_hash(romfs, h, 8);
+
 
     if (file) {
         r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);
@@ -99,30 +105,56 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
             fio_set_opaque(r, romfs_fds + r);
         }
     }
-    return r;
+    return r;/*romfs_fds[3], r = 3 */
 }
 
-static int romfs_path(void * opaque, const char * path) {
-    uint32_t h = hash_djb2((const uint8_t *) path, -1);
-    const uint8_t * romfs = (const uint8_t *) opaque;
-    const uint8_t * file;
-    int r = -1;
 
-    file = romfs_get_file_by_hash(romfs, h, NULL);
+static int romfs_list(void * opaque) {
+    int len, console_col_len = 0;
+    uint8_t *meta = (uint8_t *) opaque;
+    uint8_t buf[256];
 
-    if (file) {
-        r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);
-        if (r > 0) {
-            romfs_fds[r].file = file;
-            romfs_fds[r].cursor = 0;
-            fio_set_opaque(r, romfs_fds + r);
-        }
+    if (!meta)
+        return -1;
+
+    memset(buf, 0, sizeof(buf));
+
+    fio_printf(1, "\r\n");
+
+    while (get_unaligned(meta)) {
+    /* Move to the next field: the length of the file name. */
+    meta += 4;
+
+    /* Get the length of the file name. */
+    len = meta[0];
+
+    /* Move to to the next field: the file name. */
+    meta++;
+
+    memcpy(buf, meta, len);
+
+    buf[len] = '\0';
+
+
+    fio_printf(1, "%s ", buf);
+
+    console_col_len += len;
+
+    /*
+    * Move to the next field: the length of the content of the file.
+    */
+    meta += len;
+
+    /* Move to the next field: the content of the file. */
+    meta += get_unaligned(meta) + 4;
     }
-    return r;
+
+    fio_printf(1, "\r\n");
+    return 0;
 }
 
 void register_romfs(const char * mountpoint, const uint8_t * romfs) {
 //    DBGOUT("Registering romfs `%s' @ %p\r\n", mountpoint, romfs);
     /*mountpoint="romfs", * romfs = &_sromfs*/
-    register_fs(mountpoint, romfs_open, romfs_path, (void *) romfs);
+    register_fs(mountpoint, romfs_open, romfs_list, (void *) romfs);
 }

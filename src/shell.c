@@ -15,7 +15,10 @@ typedef struct {
 	const char *desc;
 } cmdlist;
 
+int  filedump_flag;
+
 void ls_command(int, char **);
+void pwd_command(int, char **);
 void man_command(int, char **);
 void cat_command(int, char **);
 void ps_command(int, char **);
@@ -29,6 +32,7 @@ void test_command(int, char **);
 
 cmdlist cl[]={
 	MKCL(ls, "List directory"),
+	MKCL(pwd, "Show the true path in host"),
 	MKCL(man, "Show the manual of the command"),
 	MKCL(cat, "Concatenate files and print on the stdout"),
 	MKCL(ps, "Report a snapshot of the current processes"),
@@ -60,13 +64,24 @@ int parse_command(char *str, char *argv[]){
 }
 
 void ls_command(int n, char *argv[]){
+	char buf[128];
+	int fd = fs_list("romfs"); 
 
+	/*fetch which fd is and prinft it out*/
+	int count;
+	while((count=fio_read(fd, buf, sizeof(buf)))>0){
+		fio_write(1, buf, count);
+	}
+
+	fio_printf(1, "\r\n");
 }
+
 
 int filedump(const char *filename){
 	char buf[128];
+	int fd;
 
-	int fd=fs_open(filename, 0, O_RDONLY);
+	fd = fs_open(filename, 0, O_RDONLY);
 
 	if(fd==OPENFAIL)/*OPENFAIL=-1*/
 		return 0;
@@ -82,6 +97,20 @@ int filedump(const char *filename){
 	return 1;
 }
 
+void pwd_command(int n, char *argv[]){
+
+	filedump_flag = 0;
+	if(n==1){/*no assigned directory*/
+		fio_printf(2, "\r\nUsage: cat <filename>\r\n");
+		return;
+	}
+
+	if(!filedump(argv[1]))
+		fio_printf(2, "\r\n%s no such file or directory.\r\n", argv[1]);/*assigned wrong directory*/
+
+	fio_printf(1, "\r\n");
+}
+
 void ps_command(int n, char *argv[]){
 	signed char buf[1024];
 	vTaskList(buf);
@@ -91,6 +120,8 @@ void ps_command(int n, char *argv[]){
 }
 
 void cat_command(int n, char *argv[]){
+
+	filedump_flag = 1;
 	if(n==1){/*no assigned directory*/
 		fio_printf(2, "\r\nUsage: cat <filename>\r\n");
 		return;
@@ -98,6 +129,8 @@ void cat_command(int n, char *argv[]){
 
 	if(!filedump(argv[1]))
 		fio_printf(2, "\r\n%s no such file or directory.\r\n", argv[1]);/*assigned wrong directory*/
+
+	fio_printf(1, "\r\n");	
 }
 
 void man_command(int n, char *argv[]){
