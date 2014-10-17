@@ -7,6 +7,8 @@ typedef void cmdfunc(int, char *[]);
 
 cmdfunc *do_command(const char *str);
 
+int fibonacci(int number);
+
 extern int  filedump_flag;
 
 #endif

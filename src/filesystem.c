@@ -11,7 +11,7 @@
 struct fs_t {
     uint32_t hash;
     fs_open_t cb;
-    fs_path_t path_cb;
+    fs_list_t list_cb;
     void * opaque;
 };
 
@@ -21,7 +21,7 @@ __attribute__((constructor)) void fs_init() {
     memset(fss, 0, sizeof(fss));
 }
 
-int register_fs(const char * mountpoint, fs_open_t callback, fs_path_t path,void * opaque) {
+int register_fs(const char * mountpoint, fs_open_t callback, fs_list_t list,void * opaque) {
     int i;    /*mountpoint = "romfs" romfs_open = callback   &_sromfs = opaque*/
     DBGOUT("register_fs(\"%s\", %p, %p)\r\n", mountpoint, callback, opaque);
     
@@ -29,7 +29,7 @@ int register_fs(const char * mountpoint, fs_open_t callback, fs_path_t path,void
         if (!fss[i].cb) {
             fss[i].hash = hash_djb2((const uint8_t *) mountpoint, -1);/*194595040*/
             fss[i].cb = callback;
-            fss[i].path_cb = path;
+            fss[i].list_cb = list;
             fss[i].opaque = opaque;
             return 0;
         }
@@ -52,13 +52,22 @@ int fs_open(const char * path, int flags, int mode) {
     if (!slash)/*no '/' will return -2*/
         return -2;
 
-    hash = hash_djb2((const uint8_t *) path, slash - path);
+    hash = hash_djb2((const uint8_t *) path, slash - path);/*hash(/romfs/test.txt)*/
     path = slash + 1;
 
     for (i = 0; i < MAX_FS; i++) {
-        if (fss[i].hash == hash)
+        if (fss[i].hash == hash)/*check hash(/romfs/test.txt)*/
             return fss[i].cb(fss[i].opaque, path, flags, mode); /*with '/' but wrong return -1 */
     }
     
     return -2;
 }
+
+int fs_list(const char * path) {
+          /*path = "romfs"*/  
+//    DBGOUT("fs_open(\"%s\", %i, %i)\r\n", path, flags, mode); 
+    
+    return fss[3].list_cb(fss[3].opaque); /*with '/' but wrong return -1 */
+   
+}
+

@@ -64,14 +64,9 @@ int parse_command(char *str, char *argv[]){
 }
 
 void ls_command(int n, char *argv[]){
-	char buf[128];
-	int fd = fs_list("romfs"); 
-
-	/*fetch which fd is and prinft it out*/
-	int count;
-	while((count=fio_read(fd, buf, sizeof(buf)))>0){
-		fio_write(1, buf, count);
-	}
+	
+	char buf[1024];
+	fs_list(buf); 
 
 	fio_printf(1, "\r\n");
 }
@@ -176,7 +171,9 @@ void help_command(int n,char *argv[]){
 void test_command(int n, char *argv[]) {
     int handle;
     int error;
-
+    int number = 0;
+    char fib_buf[10];
+    
     fio_printf(1, "\r\n");
 
     handle = host_action(SYS_OPEN, "mkdir -p output", 8);
@@ -185,7 +182,12 @@ void test_command(int n, char *argv[]) {
         return;
     }
 
-    char *buffer = "Test host_write function which can write data to output/syslog\n";
+    number = *argv[1] - 48;
+    int fib = fibonacci(number); 
+    sprintf(fib_buf,"%d",fib);  
+  	
+    char *buffer = fib_buf;
+    //char *buffer = "Test host_write function which can write data to output/syslog\n";
     error = host_action(SYS_WRITE, handle, (void *)buffer, strlen(buffer));
     if(error != 0) {
         fio_printf(1, "Write file error! Remain %d bytes didn't write in the file.\n\r", error);
@@ -206,3 +208,27 @@ cmdfunc *do_command(const char *cmd){
 	}
 	return NULL;	
 }
+
+int fibonacci(int number)
+{
+	int f0 = 0 ;
+	int f1 = 1 ;
+	int fn = 0 ;
+	int i;
+
+	if(number < 0 )
+		return -1;
+	else if (number == 0)
+		return 0;
+	else if (number == 1)
+		return 1;
+
+	for (i=0;i<(number-1);i++)
+	{
+		fn = f0 + f1;
+		f0 = f1;
+		f1 = fn;
+	}
+	return fn;
+}
+
