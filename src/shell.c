@@ -68,7 +68,7 @@ void ls_command(int n, char *argv[]){
 	char buf[1024];
 	fs_list(buf); 
 
-	fio_printf(1, "\r\n");
+	fio_printf(1, "%s\r\n", buf);
 }
 
 

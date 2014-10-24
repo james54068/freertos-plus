@@ -13,6 +13,7 @@ struct fs_t {
     fs_open_t cb;
     fs_list_t list_cb;
     void * opaque;
+    const char * fs_name;
 };
 
 static struct fs_t fss[MAX_FS];
@@ -31,18 +32,18 @@ int register_fs(const char * mountpoint, fs_open_t callback, fs_list_t list,void
             fss[i].cb = callback;
             fss[i].list_cb = list;
             fss[i].opaque = opaque;
+            fss[i].fs_name = mountpoint;
             return 0;
         }
     }
     
     return -1;
 }
-
+/*check which file system is open and call corresponding callback functions*/
 int fs_open(const char * path, int flags, int mode) {
-    const char * slash;/*path = "/romfs/test.txt"*/
+    const char * slash;
     uint32_t hash;
     int i;
-//    DBGOUT("fs_open(\"%s\", %i, %i)\r\n", path, flags, mode);
     
     while (path[0] == '/')
         path++;
@@ -52,7 +53,7 @@ int fs_open(const char * path, int flags, int mode) {
     if (!slash)/*no '/' will return -2*/
         return -2;
 
-    hash = hash_djb2((const uint8_t *) path, slash - path);/*hash(/romfs/test.txt)*/
+    hash = hash_djb2((const uint8_t *) path, slash - path);
     path = slash + 1;
 
     for (i = 0; i < MAX_FS; i++) {
@@ -63,11 +64,15 @@ int fs_open(const char * path, int flags, int mode) {
     return -2;
 }
 
-int fs_list(const char * path) {
-          /*path = "romfs"*/  
-//    DBGOUT("fs_open(\"%s\", %i, %i)\r\n", path, flags, mode); 
-    
-    return fss[3].list_cb(fss[3].opaque); /*with '/' but wrong return -1 */
-   
+void fs_list(char * buf){
+    int i;
+    *buf = (char)0x00;
+    for (i = 0; i < MAX_FS; i++) {
+        if (!fss[i].cb) {
+        return;
+        }   
+        strcat((char *)buf, (const char *)"\r\n");
+        strcat((char *)buf, fss[i].fs_name);
+    }
 }
 

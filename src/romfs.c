@@ -107,50 +107,14 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     }
     return r;/*romfs_fds[3], r = 3 */
 }
-
-
-static int romfs_list(void * opaque) {
-    int len, console_col_len = 0;
-    uint8_t *meta = (uint8_t *) opaque;
-    uint8_t buf[256];
-
-    if (!meta)
-        return -1;
-
-    memset(buf, 0, sizeof(buf));
-
-    fio_printf(1, "\r\n");
-
-    while (get_unaligned(meta)) {
-    /* Move to the next field: the length of the file name. */
-    meta += 4;
-
-    /* Get the length of the file name. */
-    len = meta[0];
-
-    /* Move to to the next field: the file name. */
-    meta++;
-
-    memcpy(buf, meta, len);
-
-    buf[len] = '\0';
-
-
-    fio_printf(1, "%s ", buf);
-
-    console_col_len += len;
-
-    /*
-    * Move to the next field: the length of the content of the file.
-    */
-    meta += len;
-
-    /* Move to the next field: the content of the file. */
-    meta += get_unaligned(meta) + 4;
+   
+static void romfs_list(void * opaque, char * filename) {
+    const uint8_t * meta;
+    //*filename = (char)0x00;
+    for (meta = opaque; get_unaligned(meta) && get_unaligned(meta + 4); meta += get_unaligned(meta + 4) + get_unaligned(meta + 8) + 12) {
+        strcat((char *)filename, (const char *)"\r\n");
+        strncat((char *)filename, (char *)(meta + 12), get_unaligned(meta + 8));
     }
-
-    fio_printf(1, "\r\n");
-    return 0;
 }
 
 void register_romfs(const char * mountpoint, const uint8_t * romfs) {
