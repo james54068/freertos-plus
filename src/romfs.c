@@ -67,17 +67,15 @@ static off_t romfs_seek(void * opaque, off_t offset, int whence) {
     return offset;
 }
 
-const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t  len) {
+const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32_t *len) {
     const uint8_t * meta;              /*romfs=0xdba4 <_sromfs> , h=3764664357, len=0x0 */
-    
-    for (meta = romfs; get_unaligned(meta) && get_unaligned(meta + 32 ); meta += get_unaligned(meta + 32) + 36) {
+    for (meta = romfs; get_unaligned(meta) && get_unaligned(meta + 8 + get_unaligned(meta+4)); meta += get_unaligned(meta + 8 + get_unaligned(meta+4)) + get_unaligned(meta+4) +12) {
         if (get_unaligned(meta) == h) {/*check hash(test.txt)*/
-/*
-            if (len) {
-                *len = get_unaligned(meta + 32);
-            }
-  */
-            return meta + len;
+ 
+            if (filedump_flag == 1)
+                return meta + get_unaligned(meta+4) + 12;
+            else if(filedump_flag == 0)
+                return meta + 8;
         }
     }
 
@@ -91,11 +89,11 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     const uint8_t * file;
     int r = -1;
 
-    if(filedump_flag == 1)
-    file = romfs_get_file_by_hash(romfs, h, 36);/*check hash(test.txt)*/
-    else if(filedump_flag == 0)
-    file = romfs_get_file_by_hash(romfs, h, 8);
-
+//    if(filedump_flag == 1)
+    file = romfs_get_file_by_hash(romfs, h, NULL);/*check hash(test.txt)*/
+/*    else if(filedump_flag == 0)
+    file = romfs_get_file_by_hash(romfs, h, 0);
+*/
 
     if (file) {
         r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);

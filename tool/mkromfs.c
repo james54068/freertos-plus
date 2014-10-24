@@ -51,7 +51,7 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
             strcat(fullpath, "/");
             rec_dirp = opendir(fullpath);
             processdir(rec_dirp, fullpath + strlen(prefix) + 1, outfile, prefix);
-            closedir(rec_dirp);
+            //closedir(rec_dirp);
         } else {
             hash = hash_djb2((const uint8_t *) ent->d_name, cur_hash);
             infile = fopen(fullpath, "rb");
@@ -81,7 +81,7 @@ void processdir(DIR * dirp, const char * curpath, FILE * outfile, const char * p
             b = (size >> 24) & 0xff; fwrite(&b, 1, 1, outfile);
             
             // add fullpath
-            fwrite(fullpath, 24, 1, outfile);
+            fwrite(fullpath, size, 1, outfile);
 
 
             // calculate file size    

@@ -66,8 +66,17 @@ int parse_command(char *str, char *argv[]){
 void ls_command(int n, char *argv[]){
 	
 	char buf[1024];
-	fs_list(buf); 
 
+	if (n == 1) {
+		fs_list(buf); 
+	} else if (n == 2) {
+		const char * path = argv[1];
+		list_fs_path(buf, path);
+	} else {
+		fio_printf(1, "\r\nparameter error\r\n");
+		return;
+	}
+	
 	fio_printf(1, "%s\r\n", buf);
 }
 
