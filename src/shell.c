@@ -18,6 +18,7 @@ typedef struct {
 int  filedump_flag;
 
 void ls_command(int, char **);
+void lfs_command(int, char **);
 void pwd_command(int, char **);
 void man_command(int, char **);
 void cat_command(int, char **);
@@ -32,6 +33,7 @@ void test_command(int, char **);
 
 cmdlist cl[]={
 	MKCL(ls, "List directory"),
+	MKCL(lfs, "List File system"),
 	MKCL(pwd, "Show the true path in host"),
 	MKCL(man, "Show the manual of the command"),
 	MKCL(cat, "Concatenate files and print on the stdout"),
@@ -64,20 +66,17 @@ int parse_command(char *str, char *argv[]){
 }
 
 void ls_command(int n, char *argv[]){
-	
+
 	char buf[1024];
 
-	if (n == 1) {
-		fs_list(buf); 
-	} else if (n == 2) {
-		const char * path = argv[1];
-		list_fs_path(buf, path);
-	} else {
-		fio_printf(1, "\r\nparameter error\r\n");
+	if(n==1){/*no assigned directory*/
+		fio_printf(2, "\r\nPlease enter file system name check "lfs" \r\n");
 		return;
+	}else if (n == 2) {
+		const char * path = argv[1];
+		fs_path_list(buf, path);
 	}
-	
-	fio_printf(1, "%s\r\n", buf);
+	fio_printf(1, "\r\n");
 }
 
 
@@ -99,6 +98,13 @@ int filedump(const char *filename){
 
 	fio_close(fd);
 	return 1;
+}
+
+void lfs_command(int n, char *argv[]){
+
+	char buf[1024];
+	fs_list(buf); 
+	fio_printf(1, "%s\r\n", buf);
 }
 
 void pwd_command(int n, char *argv[]){

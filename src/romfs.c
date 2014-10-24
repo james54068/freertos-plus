@@ -89,12 +89,8 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     const uint8_t * file;
     int r = -1;
 
-//    if(filedump_flag == 1)
     file = romfs_get_file_by_hash(romfs, h, NULL);/*check hash(test.txt)*/
-/*    else if(filedump_flag == 0)
-    file = romfs_get_file_by_hash(romfs, h, 0);
-*/
-
+    /*reset "fio"*/
     if (file) {
         r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);
         if (r > 0) {
@@ -109,9 +105,9 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
 static void romfs_list(void * opaque, char * filename) {
     const uint8_t * meta;
     //*filename = (char)0x00;
-    for (meta = opaque; get_unaligned(meta) && get_unaligned(meta + 4); meta += get_unaligned(meta + 4) + get_unaligned(meta + 8) + 12) {
+    for (meta = opaque; get_unaligned(meta) && get_unaligned(meta + 8 + get_unaligned(meta+4)); meta += get_unaligned(meta + 8 + get_unaligned(meta+4)) + get_unaligned(meta+4) +12) {
         strcat((char *)filename, (const char *)"\r\n");
-        strncat((char *)filename, (char *)(meta + 12), get_unaligned(meta + 8));
+        strncat((char *)filename, (char *)(meta + 8), get_unaligned(meta + 4));
     }
 }
 

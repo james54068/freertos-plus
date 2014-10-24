@@ -76,34 +76,13 @@ void fs_list(char * buf){
     }
 }
 
-void list_fs_path(char * buf, const char * path) {
+void fs_path_list(char * buf, const char * path) {
 
     int i;
     *buf = (char)0x00;
-    if (strcmp((char *)path, (const char *)"/") == 0) {
-        for (i = 0; i < MAX_FS; i++) {
-            if (!fss[i].cb) {
-                return;
-            }
-        strcat((char *)buf, (const char *)"\r\n");
-        strcat((char *)buf, fss[i].fs_name);
-        }
-    }
-
-    const char * slash;
     uint32_t hash;
-
-    while (path[0] == '/')
-    path++;
-
-    slash = strchr(path, '/');
-
-    if (!slash)
-    return;
-
-    hash = hash_djb2((const uint8_t *) path, slash - path);
-    path = slash + 1;
-
+    hash = hash_djb2((const uint8_t *) path, strlen(path));
+    
     for (i = 0; i < MAX_FS; i++) {
     if (fss[i].hash == hash)
         fss[i].list_cb(fss[i].opaque, buf);
