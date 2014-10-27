@@ -102,13 +102,31 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     return r;/*romfs_fds[3], r = 3 */
 }
    
-static void romfs_list(void * opaque, char * filename) {
+static void romfs_list(void * opaque) {
     const uint8_t * meta;
-    //*filename = (char)0x00;
-    for (meta = opaque; get_unaligned(meta) && get_unaligned(meta + 8 + get_unaligned(meta+4)); meta += get_unaligned(meta + 8 + get_unaligned(meta+4)) + get_unaligned(meta+4) +12) {
-        strcat((char *)filename, (const char *)"\r\n");
-        strncat((char *)filename, (char *)(meta + 8), get_unaligned(meta + 4));
+    const uint8_t * file;
+    char buf[128];
+    int r = -1;
+    
+    r = fio_open(romfs_read, NULL, romfs_seek, NULL, NULL);
+    for (meta = opaque; get_unaligned(meta) && get_unaligned(meta + 8 + get_unaligned(meta+4)); meta += get_unaligned(meta + 8 + get_unaligned(meta+4)) + get_unaligned(meta+4) +12) {   
+        file = meta + 8;        
+        if (r > 0) {
+            romfs_fds[r].file = file;
+            romfs_fds[r].cursor = 0;
+            fio_set_opaque(r, romfs_fds + r);
+        }
+
+        fio_printf(1, "\r\n");
+
+        /*read and print out from fio API*/
+        int count;
+         while((count=fio_read(r, buf, sizeof(buf)))>0){
+        fio_write(1, buf, count);
+        }
+       
     }
+    fio_close(r);
 }
 
 void register_romfs(const char * mountpoint, const uint8_t * romfs) {

@@ -75,17 +75,17 @@ void fs_list(char * buf){
         strcat((char *)buf, fss[i].fs_name);
     }
 }
+/*check which file syetem by hash */
+void fs_path_list(const char * path) {
 
-void fs_path_list(char * buf, const char * path) {
-
-    int i;
-    *buf = (char)0x00;
+    int i; 
     uint32_t hash;
     hash = hash_djb2((const uint8_t *) path, strlen(path));
     
     for (i = 0; i < MAX_FS; i++) {
     if (fss[i].hash == hash)
-        fss[i].list_cb(fss[i].opaque, buf);
+        fss[i].list_cb(fss[i].opaque);
+        /*pass file system pointer for searching*/
     }
 }
 

@@ -67,15 +67,14 @@ int parse_command(char *str, char *argv[]){
 
 void ls_command(int n, char *argv[]){
 
-	char buf[1024];
-
 	if(n==1){/*no assigned directory*/
-		fio_printf(2, "\r\nPlease enter file system name check "lfs" \r\n");
+		fio_printf(2, "\r\nPlease enter file system name check lfs \r\n");
 		return;
 	}else if (n == 2) {
 		const char * path = argv[1];
-		fs_path_list(buf, path);
+		fs_path_list(path);
 	}
+
 	fio_printf(1, "\r\n");
 }
 

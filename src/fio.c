@@ -100,7 +100,7 @@ static int fio_findfd() {
     
     for (i = 0; i < MAX_FDS; i++) {
         if (!fio_is_open_int(i))
-            return i;
+            return i;/*3*/
     }
     
     return -1;
@@ -113,7 +113,7 @@ int fio_is_open(int fd) {
     xSemaphoreGive(fio_sem);
     return r;
 }
-
+/*connect fio with file system callbacks*/
 int fio_open(fdread_t fdread, fdwrite_t fdwrite, fdseek_t fdseek, fdclose_t fdclose, void * opaque) {
     int fd;
 //    DBGOUT("fio_open(%p, %p, %p, %p, %p)\r\n", fdread, fdwrite, fdseek, fdclose, opaque);
@@ -200,7 +200,7 @@ void fio_set_opaque(int fd, void * opaque) {
 #define stdin_hash 0x0BA00421
 #define stdout_hash 0x7FA08308
 #define stderr_hash 0x7FA058A3
-/*
+
 static int devfs_open(void * opaque, const char * path, int flags, int mode) {
     uint32_t h = hash_djb2((const uint8_t *) path, -1);
 //    DBGOUT("devfs_open(%p, \"%s\", %i, %i)\r\n", opaque, path, flags, mode);
@@ -223,8 +223,8 @@ static int devfs_open(void * opaque, const char * path, int flags, int mode) {
     }
     return -1;
 }
-*/
+
 void register_devfs() {
     DBGOUT("Registering devfs.\r\n");
-    //register_fs("dev", devfs_open, NULL);
+    register_fs("dev", devfs_open, NULL, NULL);
 }
